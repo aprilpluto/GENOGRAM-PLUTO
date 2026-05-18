@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — Pluto Genogram Pintar{% endblock %}
+
+{% block head %}
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+{% endblock %}
+
+{% block body %}
+<div class="min-h-screen flex flex-col bg-slate-50 dark:bg-pluto-950">
+  <header class="sticky top-0 z-50 glass border-b border-slate-200/50 dark:border-pluto-800/50 px-4 py-3">
+    <div class="max-w-[1920px] mx-auto flex items-center justify-between gap-4 flex-wrap">
+      <a href="/" class="flex items-center gap-2 shrink-0">
+        <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-pluto-500 to-accent flex items-center justify-center text-white font-bold">P</div>
+        <div>
+          <h1 class="font-bold text-sm sm:text-base leading-tight">Pluto Genogram Pintar</h1>
+          <p class="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400">by Pluto for April</p>
+        </div>
+      </a>
+      <div class="flex items-center gap-2 flex-wrap">
+        <button id="btn-undo" class="toolbar-btn" title="Undo" disabled>↶</button>
+        <button id="btn-redo" class="toolbar-btn" title="Redo" disabled>↷</button>
+        <span class="w-px h-6 bg-slate-300 dark:bg-pluto-700 hidden sm:block"></span>
+        <button id="btn-zoom-in" class="toolbar-btn" title="Zoom In">+</button>
+        <button id="btn-zoom-out" class="toolbar-btn" title="Zoom Out">−</button>
+        <button id="btn-zoom-fit" class="toolbar-btn" title="Fit View">⊡</button>
+        <button id="btn-autolayout" class="toolbar-btn" title="Auto Layout">⊞</button>
+        <span class="w-px h-6 bg-slate-300 dark:bg-pluto-700 hidden sm:block"></span>
+        <div class="relative group">
+          <button id="btn-export" class="toolbar-btn px-3">Export ▾</button>
+          <div class="hidden group-hover:block absolute right-0 top-full mt-1 py-1 rounded-xl glass shadow-xl min-w-[140px] z-50">
+            <button data-export="png" class="export-item">PNG</button>
+            <button data-export="jpg" class="export-item">JPG</button>
+            <button data-export="svg" class="export-item">SVG</button>
+            <button data-export="pdf" class="export-item">PDF</button>
+            <button data-export="json" class="export-item">JSON Project</button>
+          </div>
+        </div>
+        <button id="btn-import" class="toolbar-btn px-3">Import</button>
+        <input type="file" id="import-file" accept=".json,.txt" class="hidden">
+        <button id="theme-toggle" class="toolbar-btn" aria-label="Theme">🌙</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-1 flex flex-col lg:flex-row max-w-[1920px] mx-auto w-full p-3 gap-3 min-h-0">
+    <!-- Left panel -->
+    <aside class="lg:w-96 shrink-0 flex flex-col gap-3">
+      <div class="card p-4 flex-1 flex flex-col min-h-[280px]">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="font-semibold">Data Keluarga</h2>
+          <select id="template-select" class="text-xs rounded-lg px-2 py-1 bg-slate-100 dark:bg-pluto-800 border-0">
+            <option value="">Template...</option>
+          </select>
+        </div>
+        <textarea id="family-input" class="flex-1 w-full resize-none rounded-xl bg-slate-100/80 dark:bg-pluto-900/80 border border-slate-200 dark:border-pluto-700 p-3 text-sm font-mono focus:ring-2 focus:ring-pluto-500 outline-none transition" placeholder="Ayah: Budi, laki-laki, 55 tahun&#10;Ibu: Sinta, perempuan, 50 tahun&#10;Menikah tahun 1995&#10;Anak 1: Andi, laki-laki, 25 tahun&#10;...">Ayah: Budi, laki-laki, 55 tahun
+Ibu: Sinta, perempuan, 50 tahun
+Menikah tahun 1995
+Anak 1: Andi, laki-laki, 25 tahun
+Anak 2: Rina, perempuan, 20 tahun
+Andi menikah dengan Maya, perempuan, 24 tahun</textarea>
+        <button id="btn-generate" class="mt-3 w-full py-3 rounded-xl bg-gradient-to-r from-pluto-600 to-accent text-white font-semibold shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2">
+          <span class="generate-spinner hidden w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+          Generate Genogram
+        </button>
+      </div>
+
+      <div id="validation-panel" class="card p-4 hidden">
+        <h3 class="font-semibold text-sm mb-2 flex items-center gap-2">
+          <span id="validation-icon">✅</span> Validasi
+        </h3>
+        <ul id="validation-list" class="text-xs space-y-1 text-slate-600 dark:text-slate-400 max-h-32 overflow-y-auto"></ul>
+      </div>
+
+      <div id="suggestions-panel" class="card p-4 hidden">
+        <h3 class="font-semibold text-sm mb-2">💡 Rekomendasi</h3>
+        <ul id="suggestions-list" class="text-xs space-y-2"></ul>
+      </div>
+    </aside>
+
+    <!-- Canvas -->
+    <section class="flex-1 flex flex-col min-h-[400px] lg:min-h-0">
+      <div class="card flex-1 flex flex-col overflow-hidden relative">
+        <div class="flex items-center justify-between px-4 py-2 border-b border-slate-200/50 dark:border-pluto-800/50">
+          <span class="text-sm font-medium text-slate-500">Preview Genogram</span>
+          <span id="stats-badge" class="text-xs px-2 py-0.5 rounded-full bg-pluto-100 dark:bg-pluto-800 text-pluto-600 dark:text-pluto-300">—</span>
+        </div>
+        <div id="canvas-wrapper" class="flex-1 relative overflow-hidden bg-[radial-gradient(circle_at_1px_1px,rgba(99,102,241,0.08)_1px,transparent_0)] dark:bg-[radial-gradient(circle_at_1px_1px,rgba(99,102,241,0.12)_1px,transparent_0)] bg-[length:24px_24px]">
+          <svg id="genogram-svg" class="w-full h-full cursor-grab active:cursor-grabbing"></svg>
+          <div id="empty-state" class="absolute inset-0 flex flex-col items-center justify-center text-slate-400 pointer-events-none">
+            <span class="text-5xl mb-3 opacity-50">🧬</span>
+            <p>Ketik data keluarga lalu klik <strong>Generate Genogram</strong></p>
+          </div>
+        </div>
+        <!-- Legend -->
+        <div id="legend" class="px-4 py-2 border-t border-slate-200/50 dark:border-pluto-800/50 flex flex-wrap gap-3 text-xs"></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- Tooltip -->
+<div id="symbol-tooltip" class="fixed hidden z-[100] px-3 py-2 rounded-lg glass text-xs max-w-xs pointer-events-none shadow-xl"></div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/genogram-engine.js"></script>
+<script src="/static/js/export.js"></script>
+<script src="/static/js/app.js"></script>
+{% endblock %}
