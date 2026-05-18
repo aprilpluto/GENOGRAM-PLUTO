@@ -1,4 +1,4 @@
-"""REST API routes."""
+"""REST API routes — prefix URL tetap /api."""
 
 from flask import Blueprint, jsonify, request
 
@@ -37,7 +37,11 @@ Menikah tahun 2010""",
 
 @api_bp.route("/health", methods=["GET"])
 def health():
-    return jsonify({"status": "ok", "app": "Pluto Genogram Pintar"})
+    return jsonify({
+        "status": "ok",
+        "app": "Pluto Genogram Pintar",
+        "platform": "vercel" if __import__("os").environ.get("VERCEL") else "local",
+    })
 
 
 @api_bp.route("/parse", methods=["POST"])

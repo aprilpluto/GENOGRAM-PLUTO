@@ -19,25 +19,18 @@ Aplikasi web profesional untuk membuat diagram genogram dari input teks data kel
 
 ```
 GENOGRAM/
-├── app.py              # Flask entrypoint (Vercel)
-├── requirements.txt
-├── vercel.json
-├── api/
-│   └── routes.py       # REST API
-├── core/
-│   ├── models.py       # Domain models
-│   ├── parser.py       # Text parser
-│   ├── validator.py    # Validation engine
-│   └── layout.py       # Layout engine
+├── app.py                 # Flask entrypoint (Vercel)
+├── vercel.json            # Konfigurasi deploy gratis
+├── requirements.txt       # Hanya Flask (ringan)
+├── routes/                # API Flask (bukan folder api/ — hindari bentrok Vercel)
+│   └── routes.py
+├── core/                  # Parser, validator, layout
 ├── templates/
-│   ├── landing.html
-│   └── dashboard.html
-└── static/
-    ├── css/app.css
-    └── js/
-        ├── app.js
-        ├── genogram-engine.js
-        └── export.js
+├── public/                # Aset statis → CDN Vercel (gratis)
+│   ├── static/css/
+│   ├── static/js/
+│   └── favicon.svg
+└── DEPLOY_VERCEL.md       # Panduan deploy Hobby gratis
 ```
 
 ## Menjalankan Lokal
@@ -52,18 +45,23 @@ python app.py
 
 Buka http://localhost:5000
 
-## Deploy ke Vercel
+## Deploy ke Vercel (Gratis / Hobby)
 
-1. Install [Vercel CLI](https://vercel.com/docs/cli)
-2. Dari folder project:
+Proyek ini dioptimalkan untuk **Vercel Hobby (gratis)**:
 
-```bash
-vercel
-```
+- CSS/JS disajikan dari `public/` via CDN (tanpa membebani serverless)
+- API Flask di `app.py` (bukan folder `api/` di root)
+- Dependensi minimal: hanya `flask` (~cold start lebih cepat)
 
-3. Atau hubungkan repo GitHub ke Vercel — framework terdeteksi otomatis (Flask/Python).
+**Langkah cepat:**
 
-File `vercel.json` dan `app.py` sudah dikonfigurasi untuk routing Flask + static files.
+1. Push repo ke GitHub
+2. [vercel.com](https://vercel.com) → **Add New Project** → import repo
+3. Deploy (tanpa build command khusus)
+
+Atau via CLI: `vercel` lalu `vercel --prod`
+
+Panduan lengkap + troubleshooting: **[DEPLOY_VERCEL.md](DEPLOY_VERCEL.md)**
 
 ## Format Input Contoh
 

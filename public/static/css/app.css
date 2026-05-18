@@ -70,7 +70,6 @@
   background: #4338ca;
 }
 
-/* Genogram SVG */
 .genogram-node {
   cursor: grab;
   transition: filter 0.2s ease;
@@ -152,11 +151,6 @@
 
 #canvas-wrapper {
   min-height: 400px;
-}
-
-@keyframes pulse-ring {
-  0% { transform: scale(1); opacity: 0.8; }
-  100% { transform: scale(1.05); opacity: 0; }
 }
 
 .generating #genogram-svg {

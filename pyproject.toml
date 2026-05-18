@@ -1,0 +1,9 @@
+[project]
+name = "pluto-genogram-pintar"
+version = "1.0.0"
+requires-python = ">=3.11"
+dependencies = ["flask==3.0.3"]
+
+[tool.vercel]
+# Flask entrypoint untuk deploy gratis Vercel (zero-config compatible)
+entrypoint = "app.py"
